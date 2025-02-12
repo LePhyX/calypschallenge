@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
 import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
 
-// Configuration de ton projet Firebase
+// Configuration de ton projet Firebase avec tes informations
 const firebaseConfig = {
   apiKey: "AIzaSyC1b2lC3XhvpyuLD5-HSFwcy0fXAw-jAGk",
   authDomain: "deficalypso.firebaseapp.com",
