@@ -7,8 +7,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
   flex-direction: column;
+  padding: 20px;
 }
 
 h1 {
@@ -53,21 +53,31 @@ button:hover {
   background-color: #0056b3;
 }
 
-table {
+/* Style des tableaux avec barre de défilement */
+.table-container {
   width: 80%;
   max-width: 800px;
+  max-height: 300px;
+  overflow-y: auto;
   margin-top: 20px;
-  border-collapse: collapse;
   background-color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
-table th, table td {
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-container thead {
+  background-color: #f2f2f2;
+  position: sticky;
+  top: 0;
+}
+
+.table-container th, .table-container td {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid #ddd;
-}
-
-table th {
-  background-color: #f2f2f2;
 }
