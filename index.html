@@ -26,14 +26,14 @@
         <tr>
           <th>Nom</th>
           <th>Défi</th>
-          <th>Ajouter lien</th>
+          <th>Actions</th> <!-- Colonne pour actions (ajouter le lien) -->
         </tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
 
-  <!-- Tableau pour afficher les défis réalisés avec un lien -->
+  <!-- Tableau pour afficher les défis réalisés -->
   <h2>Défis réalisés</h2>
   <div class="table-container">
     <table id="completedChallengesTable">
@@ -46,6 +46,17 @@
       </thead>
       <tbody></tbody>
     </table>
+  </div>
+
+  <!-- Zone pour ajouter le lien à un défi -->
+  <div id="addLinkModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Ajouter un lien au défi</h3>
+      <label for="linkInput">Lien :</label>
+      <input type="url" id="linkInput" placeholder="Entrez un lien">
+      <button id="saveLinkBtn">Sauvegarder</button>
+    </div>
   </div>
 
   <script type="module" src="app.js"></script>
