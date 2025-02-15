@@ -1,8 +1,8 @@
 // Importer les fonctions nécessaires depuis Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
-import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
+import { getDatabase, ref, push, set, update, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
 
-// Configuration de ton projet Firebase avec tes informations
+// Configuration de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC1b2lC3XhvpyuLD5-HSFwcy0fXAw-jAGk",
   authDomain: "deficalypso.firebaseapp.com",
@@ -32,10 +32,10 @@ document.getElementById("challengeForm").addEventListener("submit", function(e) 
   const newChallengeRef = push(challengesRef);
   set(newChallengeRef, {
     name: name,
-    challenge: challenge
+    challenge: challenge,
+    lien: "" // Lien vide au départ
   }).then(() => {
-    // Une fois l'ajout terminé, mettre à jour le tableau
-    updateTable();
+    updateTable(); // Mettre à jour le tableau
   }).catch((error) => {
     console.error("Erreur d'ajout de défi:", error);
   });
@@ -48,19 +48,39 @@ function updateTable() {
 
   const challengesRef = ref(db, 'challenges');
   
-  // Observer les changements en temps réel sur la base de données
   onValue(challengesRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
       Object.keys(data).forEach(key => {
         const challenge = data[key];
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${challenge.name}</td><td>${challenge.challenge}</td>`;
+        
+        row.innerHTML = `
+          <td>${challenge.name}</td>
+          <td>${challenge.challenge}</td>
+          <td><a href="${challenge.lien || '#'}" target="_blank">${challenge.lien ? "Voir le lien" : "Ajouter un lien"}</a></td>
+          <td><button onclick="modifierLien('${key}')">Modifier</button></td>
+        `;
         tableBody.appendChild(row);
       });
     }
   });
 }
+
+// Fonction pour modifier le lien d'un défi
+window.modifierLien = function(idDefi) {
+  const newLink = prompt("Entrez le nouveau lien :");
+  if (newLink) {
+    const challengeRef = ref(db, `challenges/${idDefi}`);
+    update(challengeRef, {
+      lien: newLink
+    }).then(() => {
+      updateTable(); // Rafraîchir la table
+    }).catch((error) => {
+      console.error("Erreur lors de la mise à jour du lien :", error);
+    });
+  }
+};
 
 // Initialiser le tableau au chargement de la page
 updateTable();
