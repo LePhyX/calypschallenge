@@ -103,16 +103,22 @@ function updateTables() {
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
             <td><a href="${challenge.challenge}" target="_blank">Voir</a></td>
-            <td><button class="modify-link-btn" onclick="modifyLinkToChallenge('${key}', '${challenge.challenge}')">Modifier lien</button></td>
+            <td><button class="modify-link-btn">Modifier lien</button></td>
           `;
+          row.querySelector(".modify-link-btn").addEventListener('click', function() {
+            modifyLinkToChallenge(key, challenge.challenge);
+          });
           completedTableBody.appendChild(row);
         } else {
           // Si le défi ne contient pas de lien, l'ajouter au tableau des défis en attente
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
-            <td><button class="modify-link-btn" onclick="addLinkToChallenge('${key}')">Ajouter lien</button></td>
+            <td><button class="add-link-btn">Ajouter lien</button></td>
           `;
+          row.querySelector(".add-link-btn").addEventListener('click', function() {
+            addLinkToChallenge(key);
+          });
           pendingTableBody.appendChild(row);
         }
       });
