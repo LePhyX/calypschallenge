@@ -41,26 +41,6 @@ document.getElementById("challengeForm").addEventListener("submit", function (e)
   });
 });
 
-// Gérer l'ajout de lien à un défi existant
-function addLinkToChallenge(challengeId) {
-  const link = prompt("Entrez le lien du défi:");
-
-  if (link) {
-    const challengeRef = ref(db, 'challenges/' + challengeId);
-
-    // Mise à jour du défi avec le lien
-    update(challengeRef, {
-      challenge: link
-    }).then(() => {
-      console.log("Lien ajouté avec succès.");
-    }).catch((error) => {
-      console.error("Erreur d'ajout de lien:", error);
-    });
-  } else {
-    alert("Le lien ne peut pas être vide.");
-  }
-}
-
 // Mettre à jour les tableaux avec les données depuis Firebase
 function updateTables() {
   const pendingTableBody = document.querySelector("#challengeTable tbody");
@@ -79,27 +59,63 @@ function updateTables() {
         const challenge = data[key];
         const row = document.createElement("tr");
 
-        if (challenge.challenge.includes("http://") || challenge.challenge.includes("https://")) {
-          // Si le défi contient un lien, on l'ajoute au tableau des défis réalisés
+        if (challenge.link) {
+          // Ajouter à la liste des défis réalisés
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
-            <td><a href="${challenge.challenge}" target="_blank">Voir</a></td>
+            <td><a href="${challenge.link}" target="_blank">${challenge.link}</a></td>
           `;
           completedTableBody.appendChild(row);
         } else {
-          // Sinon, on l'ajoute au tableau des défis en attente avec un bouton pour ajouter un lien
+          // Ajouter à la liste des défis en attente avec un bouton pour ajouter un lien
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
-            <td><button onclick="addLinkToChallenge('${key}')">Ajouter lien</button></td>
+            <td><button class="add-link" data-id="${key}">Ajouter lien</button></td>
           `;
           pendingTableBody.appendChild(row);
         }
+      });
+
+      // Ajouter un événement pour chaque bouton "Ajouter lien"
+      document.querySelectorAll(".add-link").forEach(button => {
+        button.addEventListener("click", function() {
+          openLinkModal(this.dataset.id);
+        });
       });
     }
   });
 }
 
-// Initialiser les tableaux au chargement de la page
+// Ouvrir la modale pour ajouter un lien
+function openLinkModal(challengeId) {
+  const modal = document.getElementById("addLinkModal");
+  const closeModal = document.querySelector(".close");
+  const saveLinkBtn = document.getElementById("saveLinkBtn");
+  const linkInput = document.getElementById("linkInput");
+
+  modal.style.display = "flex";
+
+  closeModal.onclick = function() {
+    modal.style.display = "none";
+  };
+
+  saveLinkBtn.onclick = function() {
+    const link = linkInput.value;
+    if (link) {
+      const challengeRef = ref(db, 'challenges/' + challengeId);
+      update(challengeRef, {
+        link: link
+      }).then(() => {
+        modal.style.display = "none";
+        updateTables(); // Mettre à jour les tableaux
+      }).catch(error => {
+        console.error("Erreur d'ajout de lien:", error);
+      });
+    }
+  };
+}
+
+// Initialiser la mise à jour des tableaux
 updateTables();
