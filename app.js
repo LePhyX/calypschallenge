@@ -97,8 +97,8 @@ function updateTables() {
         const challenge = data[key];
         const row = document.createElement("tr");
 
+        // Si le défi contient un lien, l'ajouter au tableau des défis réalisés
         if (challenge.challenge.includes("http://") || challenge.challenge.includes("https://")) {
-          // Si le défi contient un lien, on l'ajoute au tableau des défis réalisés
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
@@ -107,7 +107,7 @@ function updateTables() {
           `;
           completedTableBody.appendChild(row);
         } else {
-          // Sinon, on l'ajoute au tableau des défis en attente
+          // Si le défi ne contient pas de lien, l'ajouter au tableau des défis en attente
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
