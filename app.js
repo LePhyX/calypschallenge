@@ -1,6 +1,6 @@
 // Importer les fonctions nécessaires depuis Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
-import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
+import { getDatabase, ref, push, set, onValue, update } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
 
 // Configuration Firebase
 const firebaseConfig = {
@@ -41,6 +41,26 @@ document.getElementById("challengeForm").addEventListener("submit", function (e)
   });
 });
 
+// Gérer l'ajout de lien à un défi existant
+function addLinkToChallenge(challengeId) {
+  const link = prompt("Entrez le lien du défi:");
+
+  if (link) {
+    const challengeRef = ref(db, 'challenges/' + challengeId);
+
+    // Mise à jour du défi avec le lien
+    update(challengeRef, {
+      challenge: link
+    }).then(() => {
+      console.log("Lien ajouté avec succès.");
+    }).catch((error) => {
+      console.error("Erreur d'ajout de lien:", error);
+    });
+  } else {
+    alert("Le lien ne peut pas être vide.");
+  }
+}
+
 // Mettre à jour les tableaux avec les données depuis Firebase
 function updateTables() {
   const pendingTableBody = document.querySelector("#challengeTable tbody");
@@ -68,10 +88,11 @@ function updateTables() {
           `;
           completedTableBody.appendChild(row);
         } else {
-          // Sinon, on l'ajoute au tableau des défis en attente
+          // Sinon, on l'ajoute au tableau des défis en attente avec un bouton pour ajouter un lien
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
+            <td><button onclick="addLinkToChallenge('${key}')">Ajouter lien</button></td>
           `;
           pendingTableBody.appendChild(row);
         }
