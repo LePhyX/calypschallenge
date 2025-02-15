@@ -1,6 +1,6 @@
 // Importer les fonctions nécessaires depuis Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
-import { getDatabase, ref, push, set, onValue, update } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
+import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
 
 // Configuration Firebase
 const firebaseConfig = {
@@ -41,6 +41,25 @@ document.getElementById("challengeForm").addEventListener("submit", function (e)
   });
 });
 
+// Fonction pour mettre à jour le lien d'un défi
+function modifyLinkToChallenge(challengeId) {
+  const newLink = prompt("Entrez le nouveau lien :");
+
+  if (newLink && (newLink.startsWith("http://") || newLink.startsWith("https://"))) {
+    const challengeRef = ref(db, 'challenges/' + challengeId);
+    set(challengeRef, {
+      ...challenge,  // Conserver les autres informations du défi
+      challenge: newLink
+    }).then(() => {
+      alert("Lien mis à jour avec succès !");
+    }).catch((error) => {
+      console.error("Erreur lors de la mise à jour du lien:", error);
+    });
+  } else {
+    alert("Le lien doit commencer par 'http://' ou 'https://'");
+  }
+}
+
 // Mettre à jour les tableaux avec les données depuis Firebase
 function updateTables() {
   const pendingTableBody = document.querySelector("#challengeTable tbody");
@@ -59,63 +78,27 @@ function updateTables() {
         const challenge = data[key];
         const row = document.createElement("tr");
 
-        if (challenge.link) {
-          // Ajouter à la liste des défis réalisés
+        if (challenge.challenge.includes("http://") || challenge.challenge.includes("https://")) {
+          // Si le défi contient un lien, on l'ajoute au tableau des défis réalisés
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
-            <td><a href="${challenge.link}" target="_blank">${challenge.link}</a></td>
+            <td><a href="${challenge.challenge}" target="_blank">Voir</a></td>
+            <td><button class="modify-link-btn" onclick="modifyLinkToChallenge('${key}')">Modifier lien</button></td> <!-- Bouton Modifier lien -->
           `;
           completedTableBody.appendChild(row);
         } else {
-          // Ajouter à la liste des défis en attente avec un bouton pour ajouter un lien
+          // Sinon, on l'ajoute au tableau des défis en attente
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
-            <td><button class="add-link" data-id="${key}">Ajouter lien</button></td>
           `;
           pendingTableBody.appendChild(row);
         }
-      });
-
-      // Ajouter un événement pour chaque bouton "Ajouter lien"
-      document.querySelectorAll(".add-link").forEach(button => {
-        button.addEventListener("click", function() {
-          openLinkModal(this.dataset.id);
-        });
       });
     }
   });
 }
 
-// Ouvrir la modale pour ajouter un lien
-function openLinkModal(challengeId) {
-  const modal = document.getElementById("addLinkModal");
-  const closeModal = document.querySelector(".close");
-  const saveLinkBtn = document.getElementById("saveLinkBtn");
-  const linkInput = document.getElementById("linkInput");
-
-  modal.style.display = "flex";
-
-  closeModal.onclick = function() {
-    modal.style.display = "none";
-  };
-
-  saveLinkBtn.onclick = function() {
-    const link = linkInput.value;
-    if (link) {
-      const challengeRef = ref(db, 'challenges/' + challengeId);
-      update(challengeRef, {
-        link: link
-      }).then(() => {
-        modal.style.display = "none";
-        updateTables(); // Mettre à jour les tableaux
-      }).catch(error => {
-        console.error("Erreur d'ajout de lien:", error);
-      });
-    }
-  };
-}
-
-// Initialiser la mise à jour des tableaux
+// Initialiser les tableaux au chargement de la page
 updateTables();
