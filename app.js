@@ -105,10 +105,12 @@ function updateTables() {
             <td><a href="${challenge.challenge}" target="_blank">Voir</a></td>
             <td><button class="modify-link-btn">Modifier lien</button></td>
           `;
+          completedTableBody.appendChild(row);
+
+          // Lier le bouton "Modifier lien"
           row.querySelector(".modify-link-btn").addEventListener('click', function() {
             modifyLinkToChallenge(key, challenge.challenge);
           });
-          completedTableBody.appendChild(row);
         } else {
           // Si le défi ne contient pas de lien, l'ajouter au tableau des défis en attente
           row.innerHTML = `
@@ -116,10 +118,12 @@ function updateTables() {
             <td>${challenge.challenge}</td>
             <td><button class="add-link-btn">Ajouter lien</button></td>
           `;
+          pendingTableBody.appendChild(row);
+
+          // Lier le bouton "Ajouter lien"
           row.querySelector(".add-link-btn").addEventListener('click', function() {
             addLinkToChallenge(key);
           });
-          pendingTableBody.appendChild(row);
         }
       });
     }
