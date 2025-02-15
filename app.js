@@ -1,8 +1,8 @@
 // Importer les fonctions nécessaires depuis Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
-import { getDatabase, ref, push, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
+import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
 
-// Configuration de Firebase
+// Configuration Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC1b2lC3XhvpyuLD5-HSFwcy0fXAw-jAGk",
   authDomain: "deficalypso.firebaseapp.com",
@@ -19,7 +19,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // Gérer l'ajout de défi au formulaire
-document.getElementById("challengeForm").addEventListener("submit", function(e) {
+document.getElementById("challengeForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
   const name = document.getElementById("name").value;
@@ -32,10 +32,10 @@ document.getElementById("challengeForm").addEventListener("submit", function(e) 
   const newChallengeRef = push(challengesRef);
   set(newChallengeRef, {
     name: name,
-    challenge: challenge,
-    lien: "" // Lien vide au départ
+    challenge: challenge
   }).then(() => {
-    updateTables(); // Mettre à jour les tableaux
+    // Réinitialiser le formulaire
+    document.getElementById("challengeForm").reset();
   }).catch((error) => {
     console.error("Erreur d'ajout de défi:", error);
   });
@@ -43,54 +43,42 @@ document.getElementById("challengeForm").addEventListener("submit", function(e) 
 
 // Mettre à jour les tableaux avec les données depuis Firebase
 function updateTables() {
-  const tableBodyPending = document.querySelector("#challengeTable tbody");
-  const tableBodyCompleted = document.querySelector("#completedChallengesTable tbody");
-  tableBodyPending.innerHTML = ""; // Vider le tableau des défis en attente
-  tableBodyCompleted.innerHTML = ""; // Vider le tableau des défis réalisés
+  const pendingTableBody = document.querySelector("#challengeTable tbody");
+  const completedTableBody = document.querySelector("#completedChallengesTable tbody");
+
+  pendingTableBody.innerHTML = ""; // Vider le tableau des défis en attente
+  completedTableBody.innerHTML = ""; // Vider le tableau des défis réalisés
 
   const challengesRef = ref(db, 'challenges');
-  
+
+  // Observer les changements en temps réel sur la base de données
   onValue(challengesRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
       Object.keys(data).forEach(key => {
         const challenge = data[key];
         const row = document.createElement("tr");
-        
-        if (challenge.lien) {
+
+        if (challenge.challenge.includes("http://") || challenge.challenge.includes("https://")) {
+          // Si le défi contient un lien, on l'ajoute au tableau des défis réalisés
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
-            <td><a href="${challenge.lien}" target="_blank">Voir le lien</a></td>
+            <td><a href="${challenge.challenge}" target="_blank">Voir</a></td>
           `;
-          tableBodyCompleted.appendChild(row);
+          completedTableBody.appendChild(row);
         } else {
+          // Sinon, on l'ajoute au tableau des défis en attente
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
-            <td><button onclick="modifierLien('${key}')">Ajouter un lien</button></td>
           `;
-          tableBodyPending.appendChild(row);
+          pendingTableBody.appendChild(row);
         }
       });
     }
   });
 }
-
-// Fonction pour modifier le lien d'un défi
-window.modifierLien = function(idDefi) {
-  const newLink = prompt("Entrez le nouveau lien :");
-  if (newLink) {
-    const challengeRef = ref(db, `challenges/${idDefi}`);
-    update(challengeRef, {
-      lien: newLink
-    }).then(() => {
-      updateTables(); // Rafraîchir les tableaux
-    }).catch((error) => {
-      console.error("Erreur lors de la mise à jour du lien :", error);
-    });
-  }
-};
 
 // Initialiser les tableaux au chargement de la page
 updateTables();
