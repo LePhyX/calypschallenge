@@ -1,100 +1,142 @@
-// Importer les fonctions nécessaires depuis Firebase SDK
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
-import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
-
-// Configuration Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyC1b2lC3XhvpyuLD5-HSFwcy0fXAw-jAGk",
-  authDomain: "deficalypso.firebaseapp.com",
-  databaseURL: "https://deficalypso-default-rtdb.firebaseio.com",
-  projectId: "deficalypso",
-  storageBucket: "deficalypso.firebasestorage.app",
-  messagingSenderId: "1046975151655",
-  appId: "1:1046975151655:web:98c7da596fcb21eea99802",
-  measurementId: "G-Q1WR5N0TE3"
-};
-
-// Initialiser Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// Gérer l'ajout de défi au formulaire
-document.getElementById("challengeForm").addEventListener("submit", function (e) {
-  e.preventDefault();
-
-  const name = document.getElementById("name").value;
-  const challenge = document.getElementById("challenge").value;
-
-  // Référence à la base de données
-  const challengesRef = ref(db, 'challenges');
-
-  // Ajouter un nouveau défi avec un ID unique
-  const newChallengeRef = push(challengesRef);
-  set(newChallengeRef, {
-    name: name,
-    challenge: challenge
-  }).then(() => {
-    // Réinitialiser le formulaire
-    document.getElementById("challengeForm").reset();
-  }).catch((error) => {
-    console.error("Erreur d'ajout de défi:", error);
-  });
-});
-
-// Gérer l'ajout de lien au défi
-document.getElementById("addLinkBtn").addEventListener("click", function() {
-  const challengeLink = document.getElementById("challengeLink").value;
-  
-  // Si un lien est entré, on ajoute le lien au défi
-  if (challengeLink) {
-    // Mettre à jour le champ "challenge" avec le lien
-    document.getElementById("challenge").value = challengeLink;
-    
-    // Réinitialiser le champ de lien
-    document.getElementById("challengeLink").value = '';
-  } else {
-    alert("Veuillez entrer un lien valide.");
-  }
-});
-
-// Mettre à jour les tableaux avec les données depuis Firebase
-function updateTables() {
-  const pendingTableBody = document.querySelector("#challengeTable tbody");
-  const completedTableBody = document.querySelector("#completedChallengesTable tbody");
-
-  pendingTableBody.innerHTML = ""; // Vider le tableau des défis en attente
-  completedTableBody.innerHTML = ""; // Vider le tableau des défis réalisés
-
-  const challengesRef = ref(db, 'challenges');
-
-  // Observer les changements en temps réel sur la base de données
-  onValue(challengesRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      Object.keys(data).forEach(key => {
-        const challenge = data[key];
-        const row = document.createElement("tr");
-
-        if (challenge.challenge.includes("http://") || challenge.challenge.includes("https://")) {
-          // Si le défi contient un lien, on l'ajoute au tableau des défis réalisés
-          row.innerHTML = `
-            <td>${challenge.name}</td>
-            <td>${challenge.challenge}</td>
-            <td><a href="${challenge.challenge}" target="_blank">Voir</a></td>
-          `;
-          completedTableBody.appendChild(row);
-        } else {
-          // Sinon, on l'ajoute au tableau des défis en attente
-          row.innerHTML = `
-            <td>${challenge.name}</td>
-            <td>${challenge.challenge}</td>
-          `;
-          pendingTableBody.appendChild(row);
-        }
-      });
-    }
-  });
+/* Style général pour la page */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
 }
 
-// Initialiser les tableaux au chargement de la page
-updateTables();
+h1 {
+  color: #333;
+}
+
+/* Style du formulaire */
+form {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+label {
+  margin-bottom: 5px;
+  font-size: 16px;
+  color: #333;
+}
+
+input {
+  padding: 8px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Conteneur des tableaux avec une barre de défilement */
+.table-container {
+  width: 80%;
+  max-width: 800px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+/* Style des tableaux */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background-color: #f2f2f2;
+  position: sticky;
+  top: 0;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+/* Ajout d'une scrollbar personnalisée */
+.table-container {
+  overflow-y: auto;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Espacement entre les tableaux */
+.table-wrapper {
+  margin-top: 20px;
+}
+
+/* Style spécifique pour les liens */
+td a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+td a:hover {
+  text-decoration: underline;
+}
+
+/* Style du bouton "Ajouter lien" */
+button.add-link {
+  padding: 6px 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button.add-link:hover {
+  background-color: #218838;
+}
+
+/* Pour les cellules contenant des boutons */
+td button {
+  margin-top: 5px;
+}
