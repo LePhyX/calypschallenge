@@ -1,6 +1,6 @@
 // Importer les fonctions nécessaires depuis Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
-import { getDatabase, ref, push, set, update, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
+import { getDatabase, ref, push, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
 
 // Configuration de Firebase
 const firebaseConfig = {
@@ -35,16 +35,18 @@ document.getElementById("challengeForm").addEventListener("submit", function(e) 
     challenge: challenge,
     lien: "" // Lien vide au départ
   }).then(() => {
-    updateTable(); // Mettre à jour le tableau
+    updateTables(); // Mettre à jour les tableaux
   }).catch((error) => {
     console.error("Erreur d'ajout de défi:", error);
   });
 });
 
-// Mettre à jour le tableau avec les données depuis Firebase
-function updateTable() {
-  const tableBody = document.querySelector("#challengeTable tbody");
-  tableBody.innerHTML = ""; // Vider le tableau
+// Mettre à jour les tableaux avec les données depuis Firebase
+function updateTables() {
+  const tableBodyPending = document.querySelector("#challengeTable tbody");
+  const tableBodyCompleted = document.querySelector("#completedChallengesTable tbody");
+  tableBodyPending.innerHTML = ""; // Vider le tableau des défis en attente
+  tableBodyCompleted.innerHTML = ""; // Vider le tableau des défis réalisés
 
   const challengesRef = ref(db, 'challenges');
   
@@ -55,13 +57,21 @@ function updateTable() {
         const challenge = data[key];
         const row = document.createElement("tr");
         
-        row.innerHTML = `
-          <td>${challenge.name}</td>
-          <td>${challenge.challenge}</td>
-          <td><a href="${challenge.lien || '#'}" target="_blank">${challenge.lien ? "Voir le lien" : "Ajouter un lien"}</a></td>
-          <td><button onclick="modifierLien('${key}')">Modifier</button></td>
-        `;
-        tableBody.appendChild(row);
+        if (challenge.lien) {
+          row.innerHTML = `
+            <td>${challenge.name}</td>
+            <td>${challenge.challenge}</td>
+            <td><a href="${challenge.lien}" target="_blank">Voir le lien</a></td>
+          `;
+          tableBodyCompleted.appendChild(row);
+        } else {
+          row.innerHTML = `
+            <td>${challenge.name}</td>
+            <td>${challenge.challenge}</td>
+            <td><button onclick="modifierLien('${key}')">Ajouter un lien</button></td>
+          `;
+          tableBodyPending.appendChild(row);
+        }
       });
     }
   });
@@ -75,12 +85,12 @@ window.modifierLien = function(idDefi) {
     update(challengeRef, {
       lien: newLink
     }).then(() => {
-      updateTable(); // Rafraîchir la table
+      updateTables(); // Rafraîchir les tableaux
     }).catch((error) => {
       console.error("Erreur lors de la mise à jour du lien :", error);
     });
   }
 };
 
-// Initialiser le tableau au chargement de la page
-updateTable();
+// Initialiser les tableaux au chargement de la page
+updateTables();
