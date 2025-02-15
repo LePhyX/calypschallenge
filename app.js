@@ -41,41 +41,22 @@ document.getElementById("challengeForm").addEventListener("submit", function (e)
   });
 });
 
-// Fonction pour ajouter un lien à un défi en attente
+// Fonction pour ajouter un lien à un défi existant
 function addLinkToChallenge(challengeId) {
-  const newLink = prompt("Entrez le lien du défi (doit commencer par http:// ou https://):");
+  const newLink = prompt("Entrez le nouveau lien pour ce défi:");
 
   if (newLink && (newLink.startsWith("http://") || newLink.startsWith("https://"))) {
-    const challengeRef = ref(db, 'challenges/' + challengeId);
+    const challengeRef = ref(db, 'challenges/' + challengeId); // Référence à ce défi spécifique
     set(challengeRef, {
-      name: challengeId, // Garder le nom du défi
-      challenge: newLink
+      name: challengeId.name, // Conserver le nom du défi
+      challenge: newLink // Mettre à jour uniquement le lien
     }).then(() => {
-      alert("Lien ajouté avec succès !");
-    }).catch((error) => {
-      console.error("Erreur lors de l'ajout du lien:", error);
-    });
-  } else {
-    alert("Le lien doit commencer par 'http://' ou 'https://'");
-  }
-}
-
-// Fonction pour modifier le lien d'un défi réalisé
-function modifyLinkToChallenge(challengeId, currentChallenge) {
-  const newLink = prompt("Entrez le nouveau lien :", currentChallenge);
-
-  if (newLink && (newLink.startsWith("http://") || newLink.startsWith("https://"))) {
-    const challengeRef = ref(db, 'challenges/' + challengeId);
-    set(challengeRef, {
-      name: challengeId,  // Garder le nom du défi
-      challenge: newLink
-    }).then(() => {
-      alert("Lien mis à jour avec succès !");
+      alert("Lien mis à jour avec succès!");
     }).catch((error) => {
       console.error("Erreur lors de la mise à jour du lien:", error);
     });
   } else {
-    alert("Le lien doit commencer par 'http://' ou 'https://'");
+    alert("Veuillez entrer un lien valide.");
   }
 }
 
@@ -97,33 +78,23 @@ function updateTables() {
         const challenge = data[key];
         const row = document.createElement("tr");
 
-        // Si le défi contient un lien, l'ajouter au tableau des défis réalisés
         if (challenge.challenge.includes("http://") || challenge.challenge.includes("https://")) {
+          // Si le défi contient un lien, on l'ajoute au tableau des défis réalisés
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
             <td><a href="${challenge.challenge}" target="_blank">Voir</a></td>
-            <td><button class="modify-link-btn">Modifier lien</button></td>
+            <td><button onclick="addLinkToChallenge('${key}')">Modifier lien</button></td>
           `;
           completedTableBody.appendChild(row);
-
-          // Lier le bouton "Modifier lien"
-          row.querySelector(".modify-link-btn").addEventListener('click', function() {
-            modifyLinkToChallenge(key, challenge.challenge);
-          });
         } else {
-          // Si le défi ne contient pas de lien, l'ajouter au tableau des défis en attente
+          // Sinon, on l'ajoute au tableau des défis en attente
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
-            <td><button class="add-link-btn">Ajouter lien</button></td>
+            <td><button onclick="addLinkToChallenge('${key}')">Ajouter lien</button></td>
           `;
           pendingTableBody.appendChild(row);
-
-          // Lier le bouton "Ajouter lien"
-          row.querySelector(".add-link-btn").addEventListener('click', function() {
-            addLinkToChallenge(key);
-          });
         }
       });
     }
