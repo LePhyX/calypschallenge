@@ -41,14 +41,33 @@ document.getElementById("challengeForm").addEventListener("submit", function (e)
   });
 });
 
-// Fonction pour mettre à jour le lien d'un défi
-function modifyLinkToChallenge(challengeId) {
-  const newLink = prompt("Entrez le nouveau lien :");
+// Fonction pour ajouter un lien à un défi en attente
+function addLinkToChallenge(challengeId) {
+  const newLink = prompt("Entrez le lien du défi (doit commencer par http:// ou https://):");
 
   if (newLink && (newLink.startsWith("http://") || newLink.startsWith("https://"))) {
     const challengeRef = ref(db, 'challenges/' + challengeId);
     set(challengeRef, {
-      ...challenge,  // Conserver les autres informations du défi
+      name: challengeId, // Garder le nom du défi
+      challenge: newLink
+    }).then(() => {
+      alert("Lien ajouté avec succès !");
+    }).catch((error) => {
+      console.error("Erreur lors de l'ajout du lien:", error);
+    });
+  } else {
+    alert("Le lien doit commencer par 'http://' ou 'https://'");
+  }
+}
+
+// Fonction pour modifier le lien d'un défi réalisé
+function modifyLinkToChallenge(challengeId, currentChallenge) {
+  const newLink = prompt("Entrez le nouveau lien :", currentChallenge);
+
+  if (newLink && (newLink.startsWith("http://") || newLink.startsWith("https://"))) {
+    const challengeRef = ref(db, 'challenges/' + challengeId);
+    set(challengeRef, {
+      name: challengeId,  // Garder le nom du défi
       challenge: newLink
     }).then(() => {
       alert("Lien mis à jour avec succès !");
@@ -84,7 +103,7 @@ function updateTables() {
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
             <td><a href="${challenge.challenge}" target="_blank">Voir</a></td>
-            <td><button class="modify-link-btn" onclick="modifyLinkToChallenge('${key}')">Modifier lien</button></td> <!-- Bouton Modifier lien -->
+            <td><button class="modify-link-btn" onclick="modifyLinkToChallenge('${key}', '${challenge.challenge}')">Modifier lien</button></td>
           `;
           completedTableBody.appendChild(row);
         } else {
@@ -92,6 +111,7 @@ function updateTables() {
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
+            <td><button class="modify-link-btn" onclick="addLinkToChallenge('${key}')">Ajouter lien</button></td>
           `;
           pendingTableBody.appendChild(row);
         }
