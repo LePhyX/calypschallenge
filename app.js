@@ -1,6 +1,6 @@
 // Importer les fonctions nécessaires depuis Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
-import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
+import { getDatabase, ref, push, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
 
 // Configuration Firebase
 const firebaseConfig = {
@@ -46,15 +46,27 @@ function addLinkToChallenge(challengeId) {
   const newLink = prompt("Entrez le nouveau lien pour ce défi:");
 
   if (newLink && (newLink.startsWith("http://") || newLink.startsWith("https://"))) {
-    const challengeRef = ref(db, 'challenges/' + challengeId); // Référence à ce défi spécifique
-    set(challengeRef, {
-      name: challengeId.name, // Conserver le nom du défi
-      challenge: newLink // Mettre à jour uniquement le lien
-    }).then(() => {
-      alert("Lien mis à jour avec succès!");
+    const challengeRef = ref(db, 'challenges/' + challengeId); // Référence au défi spécifique
+
+    get(challengeRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const challengeData = snapshot.val();
+
+        // Mettre à jour uniquement le champ "link"
+        update(challengeRef, {
+          link: newLink  // Ajoute un champ "link" au défi existant
+        }).then(() => {
+          alert("Lien ajouté avec succès !");
+        }).catch((error) => {
+          console.error("Erreur lors de l'ajout du lien :", error);
+        });
+      } else {
+        alert("Défi introuvable.");
+      }
     }).catch((error) => {
-      console.error("Erreur lors de la mise à jour du lien:", error);
+      console.error("Erreur lors de la récupération des données :", error);
     });
+
   } else {
     alert("Veuillez entrer un lien valide.");
   }
@@ -70,7 +82,6 @@ function updateTables() {
 
   const challengesRef = ref(db, 'challenges');
 
-  // Observer les changements en temps réel sur la base de données
   onValue(challengesRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
@@ -78,17 +89,17 @@ function updateTables() {
         const challenge = data[key];
         const row = document.createElement("tr");
 
-        if (challenge.challenge.includes("http://") || challenge.challenge.includes("https://")) {
-          // Si le défi contient un lien, on l'ajoute au tableau des défis réalisés
+        if (challenge.link) {
+          // Si un lien existe, le défi est considéré comme réalisé
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
-            <td><a href="${challenge.challenge}" target="_blank">Voir</a></td>
+            <td><a href="${challenge.link}" target="_blank">Voir</a></td>
             <td><button onclick="addLinkToChallenge('${key}')">Modifier lien</button></td>
           `;
           completedTableBody.appendChild(row);
         } else {
-          // Sinon, on l'ajoute au tableau des défis en attente
+          // Sinon, il est toujours en attente
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
