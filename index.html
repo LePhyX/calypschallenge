@@ -1,54 +1,179 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calyps Challenge</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calyps'Challenge</title>
+    <script type="module">
+        // Importer les fonctions nécessaires depuis Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+        import { getDatabase, ref, push, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
+
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC1b2lC3XhvpyuLD5-HSFwcy0fXAw-jAGk",
+            authDomain: "deficalypso.firebaseapp.com",
+            databaseURL: "https://deficalypso-default-rtdb.firebaseio.com",
+            projectId: "deficalypso",
+            storageBucket: "deficalypso.firebasestorage.app",
+            messagingSenderId: "1046975151655",
+            appId: "1:1046975151655:web:98c7da596fcb21eea99802",
+            measurementId: "G-Q1WR5N0TE3"
+        };
+
+        // Initialiser Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Gérer l'ajout de défi au formulaire
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("challengeForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const name = document.getElementById("name").value;
+                const challenge = document.getElementById("challenge").value;
+
+                // Référence à la base de données
+                const challengesRef = ref(db, 'challenges');
+                const newChallengeRef = push(challengesRef);
+
+                set(newChallengeRef, {
+                    name: name,
+                    challenge: challenge
+                }).then(() => {
+                    document.getElementById("challengeForm").reset();
+                }).catch((error) => {
+                    console.error("Erreur d'ajout de défi:", error);
+                });
+            });
+
+            // Charger les défis dans les tableaux
+            updateTables();
+        });
+
+        // Fonction pour ajouter un lien à un défi existant
+        function addLinkToChallenge(challengeId) {
+            const newLink = prompt("Entrez le nouveau lien pour ce défi:");
+            if (newLink && (newLink.startsWith("http://") || newLink.startsWith("https://"))) {
+                const challengeRef = ref(db, 'challenges/' + challengeId);
+                get(challengeRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        update(challengeRef, { link: newLink }).then(() => {
+                            alert("Lien ajouté avec succès !");
+                        }).catch((error) => {
+                            console.error("Erreur lors de l'ajout du lien :", error);
+                        });
+                    } else {
+                        alert("Défi introuvable.");
+                    }
+                }).catch((error) => {
+                    console.error("Erreur lors de la récupération des données :", error);
+                });
+            } else {
+                alert("Veuillez entrer un lien valide.");
+            }
+        }
+
+        // Rendre la fonction accessible dans le HTML
+        window.addLinkToChallenge = addLinkToChallenge;
+
+        // Mettre à jour les tableaux avec les données depuis Firebase
+        function updateTables() {
+            const pendingTableBody = document.querySelector("#challengeTable tbody");
+            const completedTableBody = document.querySelector("#completedChallengesTable tbody");
+            pendingTableBody.innerHTML = "";
+            completedTableBody.innerHTML = "";
+
+            const challengesRef = ref(db, 'challenges');
+            onValue(challengesRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        const challenge = data[key];
+                        const row = document.createElement("tr");
+
+                        if (challenge.link) {
+                            row.innerHTML = `
+                                <td>${challenge.name}</td>
+                                <td>${challenge.challenge}</td>
+                                <td><a href="${challenge.link}" target="_blank">Voir</a></td>
+                                <td><button class="edit-link" data-id="${key}">Modifier lien</button></td>
+                            `;
+                            completedTableBody.appendChild(row);
+                        } else {
+                            row.innerHTML = `
+                                <td>${challenge.name}</td>
+                                <td>${challenge.challenge}</td>
+                                <td><button class="add-link" data-id="${key}">Ajouter lien</button></td>
+                            `;
+                            pendingTableBody.appendChild(row);
+                        }
+                    });
+
+                    // Attacher les événements aux nouveaux boutons après leur création
+                    attachEventListeners();
+                }
+            });
+        }
+
+        // Fonction pour attacher les événements aux boutons après leur création
+        function attachEventListeners() {
+            document.querySelectorAll(".add-link").forEach(button => {
+                button.addEventListener("click", (event) => {
+                    const challengeId = event.target.getAttribute("data-id");
+                    addLinkToChallenge(challengeId);
+                });
+            });
+
+            document.querySelectorAll(".edit-link").forEach(button => {
+                button.addEventListener("click", (event) => {
+                    const challengeId = event.target.getAttribute("data-id");
+                    addLinkToChallenge(challengeId);
+                });
+            });
+
+            console.log("Boutons ajoutés :", document.querySelectorAll(".add-link, .edit-link"));
+        }
+    </script>
 </head>
 <body>
-  <h1>Bienvenue sur Calyps Challenge</h1>
+    <h1>Calyps'Challenge</h1>
 
-  <!-- Formulaire pour entrer les informations -->
-  <form id="challengeForm">
-    <label for="name">Nom :</label>
-    <input type="text" id="name" required>
-    <label for="challenge">Défi :</label>
-    <input type="text" id="challenge" required>
-    <button type="submit">Soumettre</button>
-  </form>
+    <!-- Formulaire pour ajouter un défi -->
+    <form id="challengeForm">
+        <input type="text" id="name" placeholder="Votre nom" required>
+        <input type="text" id="challenge" placeholder="Décrivez votre défi" required>
+        <button type="submit">Ajouter un défi</button>
+    </form>
 
-  <!-- Tableau pour afficher les défis en attente -->
-  <h2>Défis en attente</h2>
-  <div class="table-container">
-    <table id="challengeTable">
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Défi</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
+    <!-- Tableau des défis en attente -->
+    <h2>Défis en attente</h2>
+    <table id="challengeTable" border="1">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Défi</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Contenu généré dynamiquement -->
+        </tbody>
     </table>
-  </div>
 
-  <!-- Tableau pour afficher les défis réalisés avec un lien -->
-  <h2>Défis réalisés</h2>
-  <div class="table-container">
-    <table id="completedChallengesTable">
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Défi</th>
-          <th>Lien</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
+    <!-- Tableau des défis réalisés -->
+    <h2>Défis réalisés</h2>
+    <table id="completedChallengesTable" border="1">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Défi</th>
+                <th>Lien</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Contenu généré dynamiquement -->
+        </tbody>
     </table>
-  </div>
-
-  <script type="module" src="app.js"></script>
 </body>
 </html>
