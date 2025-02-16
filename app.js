@@ -34,7 +34,6 @@ document.getElementById("challengeForm").addEventListener("submit", function (e)
     name: name,
     challenge: challenge
   }).then(() => {
-    // Réinitialiser le formulaire
     document.getElementById("challengeForm").reset();
   }).catch((error) => {
     console.error("Erreur d'ajout de défi:", error);
@@ -46,15 +45,12 @@ function addLinkToChallenge(challengeId) {
   const newLink = prompt("Entrez le nouveau lien pour ce défi:");
 
   if (newLink && (newLink.startsWith("http://") || newLink.startsWith("https://"))) {
-    const challengeRef = ref(db, 'challenges/' + challengeId); // Référence au défi spécifique
+    const challengeRef = ref(db, 'challenges/' + challengeId);
 
     get(challengeRef).then((snapshot) => {
       if (snapshot.exists()) {
-        const challengeData = snapshot.val();
-
-        // Mettre à jour uniquement le champ "link"
         update(challengeRef, {
-          link: newLink  // Ajoute un champ "link" au défi existant
+          link: newLink  // Ajoute un champ "link" sans écraser les autres données
         }).then(() => {
           alert("Lien ajouté avec succès !");
         }).catch((error) => {
@@ -72,13 +68,16 @@ function addLinkToChallenge(challengeId) {
   }
 }
 
+// Rendre la fonction accessible dans le HTML
+window.addLinkToChallenge = addLinkToChallenge;
+
 // Mettre à jour les tableaux avec les données depuis Firebase
 function updateTables() {
   const pendingTableBody = document.querySelector("#challengeTable tbody");
   const completedTableBody = document.querySelector("#completedChallengesTable tbody");
 
-  pendingTableBody.innerHTML = ""; // Vider le tableau des défis en attente
-  completedTableBody.innerHTML = ""; // Vider le tableau des défis réalisés
+  pendingTableBody.innerHTML = ""; 
+  completedTableBody.innerHTML = ""; 
 
   const challengesRef = ref(db, 'challenges');
 
@@ -90,7 +89,6 @@ function updateTables() {
         const row = document.createElement("tr");
 
         if (challenge.link) {
-          // Si un lien existe, le défi est considéré comme réalisé
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
@@ -99,7 +97,6 @@ function updateTables() {
           `;
           completedTableBody.appendChild(row);
         } else {
-          // Sinon, il est toujours en attente
           row.innerHTML = `
             <td>${challenge.name}</td>
             <td>${challenge.challenge}</td>
